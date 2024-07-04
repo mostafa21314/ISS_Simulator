@@ -6,8 +6,8 @@
 #include<string>
 
 using namespace std;
-unsigned int pc;
-unsigned char memory[(16 + 64) * 1024];
+unsigned int pc=0;
+unsigned char memory[(16 + 64) * 1024] = { 65 };
 unsigned int regMemory[32];
 
 void emitError(string s)
@@ -16,7 +16,8 @@ void emitError(string s)
 	exit(0);
 }
 
-void printPrefix(unsigned int instA, unsigned int instW) {
+void printPrefix(unsigned int instA, unsigned int instW) 
+{
 	cout << "0x" << hex << std::setfill('0') << std::setw(8) << instA << "\t0x" << std::setw(8) << instW;
 }
 
@@ -144,14 +145,20 @@ void sb(unsigned int rs1, unsigned int rs2, unsigned int offset)
 
 void sh(unsigned int rs1, unsigned int rs2, unsigned int offset)
 {
-	memory[regMemory[rs1] + offset] = regMemory[rs2] & 0xFFFF;
+	memory[regMemory[rs1] + offset] = regMemory[rs2] & 0xFF;
+	memory[regMemory[rs1] + offset+1] = regMemory[rs2] & 0xFF00;
+
 	cout << "\n" << hex << memory[regMemory[rs1] + offset] << "\n";
 }
 
 void sw(unsigned int rs1, unsigned int rs2, unsigned int offset)
 {
-	memory[regMemory[rs1] + offset] = regMemory[rs2];
-	cout << "\n" << hex << memory[regMemory[rs1] + offset] << "\n";
+	memory[regMemory[rs1] + offset] = regMemory[rs2] & 0xFF;
+	memory[regMemory[rs1] + offset + 1] = regMemory[rs2] & 0xFF00;
+	memory[regMemory[rs1] + offset + 2] = regMemory[rs2] & 0xFF0000;
+	memory[regMemory[rs1] + offset + 3] = regMemory[rs2] & 0xFF000000;
+	cout << "\n" <<hex<< memory[regMemory[rs1] + offset] << "\n";
+
 }
 
 void beq(unsigned int rs1, unsigned int rs2, unsigned int offset)
@@ -285,6 +292,7 @@ void instDecExec(unsigned int instWord)
 
 	// — inst[31] — inst[30:25] inst[24:21] inst[20]
 	I_imm = ((instWord >> 20) & 0x7FF) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
+	S_imm = ((instWord >> 7) & 0x1F) | ((instWord >> 20) & 0xFE0) | (((instWord >> 31) ? 0xFFFFF000 : 0x0));
 
 	printPrefix(instPC, instWord);
 
@@ -297,6 +305,7 @@ void instDecExec(unsigned int instWord)
 			if (funct7 == 32)
 			{
 				cout << "\tSUB\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+				sub(rs1, rs2, rd);
 			}
 			else
 			{
@@ -309,24 +318,28 @@ void instDecExec(unsigned int instWord)
 		case 1:
 		{
 			cout << "\tSLL\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+			sll(rs1, rs2, rd);
 			break;
 		}
 
 		case 2:
 		{
 			cout << "\tSLT\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+			slt(rs1, rs2, rd);
 			break;
 		}
 
 		case 3:
 		{
 			cout << "\tSLTU\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+			sltu(rs1, rs2, rd);
 			break;
 		}
 
 		case 4:
 		{
 			cout << "\tXOR\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+			xorFn(rs1, rs2, rd);
 			break;
 		}
 
@@ -335,10 +348,12 @@ void instDecExec(unsigned int instWord)
 			if (funct7 == 32)
 			{
 				cout << "\tSRA\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+				sra(rs1, rs2, rd);
 			}
 			else
 			{
 				cout << "\tSRL\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+				srl(rs1, rs2, rd);
 			}
 			break;
 		}
@@ -346,6 +361,7 @@ void instDecExec(unsigned int instWord)
 		case 6:
 		{
 			cout << "\tOR\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+			orFn(rs1, rs2, rd);
 			break;
 		}
 
@@ -353,6 +369,7 @@ void instDecExec(unsigned int instWord)
 		case 7:
 		{
 			cout << "\tAND\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+			andFn(rs1, rs2, rd);
 			break;
 		}
 
@@ -375,12 +392,16 @@ void instDecExec(unsigned int instWord)
 		case 1:
 		{
 			cout << "\tSLLI\tx" << rd << ", x" << rs1 << "\n";
+			slli(rs1, rd, I_imm);
+
 			break;
 		}
 
 		case 2:
 		{
 			cout << "\tSLTI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			slti(rs1, rd, I_imm);
+
 			break;
 		}
 
@@ -388,12 +409,16 @@ void instDecExec(unsigned int instWord)
 		case 3:
 		{
 			cout << "\tSLTIU\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			sltiu(rs1, rd, I_imm);
+
 			break;
 		}
 
 		case 4:
 		{
 			cout << "\tXORI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			xori(rs1, rd, I_imm);
+
 			break;
 		}
 
@@ -402,10 +427,14 @@ void instDecExec(unsigned int instWord)
 			if (funct7 == 32)
 			{
 				cout << "\tSRAI\tx" << rd << ", x" << rs1 << "\n";
+				srai(rs1, rd, I_imm);
+
 			}
 			else
 			{
 				cout << "\tSRLI\tx" << rd << ", x" << rs1 << "\n";
+				srli(rs1, rd, I_imm);
+
 			}
 			break;
 		}
@@ -413,11 +442,13 @@ void instDecExec(unsigned int instWord)
 		case 6:
 		{
 			cout << "\tORI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			ori(rs1, rd, I_imm);
 			break;
 		}
 		case 7:
 		{
 			cout << "\tANDI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			andi(rs1, rd, I_imm);
 			break;
 		}
 		default:
@@ -430,20 +461,24 @@ void instDecExec(unsigned int instWord)
 		{
 		case 0:
 		{
-			cout << "\tSB\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)I_imm << "\n";
+			cout << "\tSB\tx" << rs2 << "," << dec<<S_imm << "(x" << rs1 << ")" << "\n";
+			sb(rs1, rs2, S_imm);
 			break;
 		}
 
 		case 1:
 		{
-			cout << "\tSH\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)I_imm << "\n";
+			cout << "\tSH\tx" << rs2 << "," << dec<<S_imm << "(x" << rs1 <<")"<< "\n";
+			sh(rs1, rs2, S_imm);
+
 			break;
 
 		}
 
 		case 2:
 		{
-			cout << "\tSW\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)I_imm << "\n";
+			cout << "\tSW\tx" << rs2 << "," << dec << S_imm << "(x" << rs1 << ")" << "\n";
+			sw(rs1, rs2, S_imm);
 			break;
 		}
 		}
@@ -457,12 +492,14 @@ void instDecExec(unsigned int instWord)
 		case 0:
 		{
 			cout << "\tBEQ\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)I_imm << "\n";
+			beq(rs1, rs2, I_imm);
 			break;
 		}
 
 		case 1:
 		{
 			cout << "\tBNE\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)I_imm << "\n";
+			bne(rs1, rs2, I_imm);
 			break;
 
 		}
@@ -470,24 +507,28 @@ void instDecExec(unsigned int instWord)
 		case 4:
 		{
 			cout << "\tBLT\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)I_imm << "\n";
+			blt(rs1, rs2, I_imm);
 			break;
 		}
 
 		case 5:
 		{
 			cout << "\tBGE\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)I_imm << "\n";
+			bge(rs1, rs2, I_imm);
 			break;
 		}
 
 		case 6:
 		{
 			cout << "\tBLTU\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)I_imm << "\n";
+			bltu(rs1, rs2, I_imm);
 			break;
 		}
 
 		case 7:
 		{
 			cout << "\tBGEU\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)I_imm << "\n";
+			bgeu(rs1, rs2, I_imm);
 			break;
 		}
 
@@ -497,17 +538,20 @@ void instDecExec(unsigned int instWord)
 	else if (opcode == 0x37)   //LUI
 	{
 		cout << "\tLUI\tx" << rd << ", " << hex << "0x" << (int)I_imm << "\n";
+		lui(rd, I_imm);
 
 	}
 	else if (opcode == 0x17)  //AUIPC
 	{
 		cout << "\tAUIBC\tx" << rd << ", " << hex << "0x" << (int)I_imm << "\n";
+		auipc(rd, I_imm);
 
 
 	}
 	else if (opcode == 0x6F)   //   JAL
 	{
 		cout << "\tJAL\tx" << rd << ", " << hex << "0x" << (int)I_imm << "\n";
+		jal(rd, I_imm);
 
 
 	}
@@ -515,6 +559,7 @@ void instDecExec(unsigned int instWord)
 	{
 
 		cout << "\tJALR\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+		jalr(rd, rs1, I_imm);
 
 	}
 
@@ -526,6 +571,7 @@ void instDecExec(unsigned int instWord)
 		case 0:
 		{
 			cout << "\tLB\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			lb(rs1, rd, I_imm);
 			break;
 
 		}
@@ -533,12 +579,14 @@ void instDecExec(unsigned int instWord)
 		case 1:
 		{
 			cout << "\tLH\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			lh(rs1, rd, I_imm);
 			break;
 		}
 
 		case 2:
 		{
-			cout << "\tLU\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			cout << "\tLW\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			lw(rs1, rd, I_imm);
 			break;
 		}
 
@@ -546,12 +594,14 @@ void instDecExec(unsigned int instWord)
 		case 4:
 		{
 			cout << "\tLBU\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			lbu(rs1, rd, I_imm);
 			break;
 		}
 
 		case 5:
 		{
 			cout << "\tLHU\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			lhu(rs1, rd, I_imm);
 			break;
 		}
 
@@ -564,6 +614,7 @@ void instDecExec(unsigned int instWord)
 	else if (opcode == 0x73) // ecall
 	{
 		cout << "\tECALL\t\n";
+		ecall();
 
 	}
 	else
@@ -577,6 +628,8 @@ void instDecExec(unsigned int instWord)
 
 int main()
 {
+
+
 
 	int argc = 2;
 	unsigned int instWord = 0;
@@ -601,9 +654,9 @@ int main()
 				(((unsigned char)memory[pc + 3]) << 24);
 			pc += 4;
 			// remove the following line once you have a complete simulator
-			if (pc == 32) break;			// stop when PC reached address 32
+			if (pc == 128) break;			// stop when PC reached address 32
 			instDecExec(instWord);
 		}
 	}
 	else emitError("Cannot access input file\n");
-} hala
+}
