@@ -8,7 +8,7 @@
 using namespace std;
 unsigned int pc=0;
 unsigned char memory[(16 + 64) * 1024] = { 65 };
-unsigned int regMemory[32];
+unsigned int regMemory[32] = { 0 };
 
 void emitError(string s)
 {
@@ -139,25 +139,30 @@ void andi(unsigned int rs1, unsigned int rd, unsigned int immediate)
 
 void sb(unsigned int rs1, unsigned int rs2, unsigned int offset)
 {
-	memory[regMemory[rs1] + offset] = regMemory[rs2] & 0xFF;
-	cout << "\n" << hex << memory[regMemory[rs1] + offset] << "\n";
+	int temp = regMemory[rs1] + offset;
+	memory[temp] = regMemory[rs2];
+	cout << "\n" << hex << (int)memory[temp] << "\n";
+	cout << endl << (int)regMemory[rs2] << endl;
+
 }
 
 void sh(unsigned int rs1, unsigned int rs2, unsigned int offset)
 {
-	memory[regMemory[rs1] + offset] = regMemory[rs2] & 0xFF;
-	memory[regMemory[rs1] + offset+1] = regMemory[rs2] & 0xFF00;
+	int temp = regMemory[rs1] + offset;
+	memory[temp] =  regMemory[rs2];
+	memory[temp + 1] = (regMemory[rs2] >> 8);
+	cout << "\n" << hex << (int)memory[temp] <<(int)memory[temp+1]<< "\n";
 
-	cout << "\n" << hex << memory[regMemory[rs1] + offset] << "\n";
 }
 
 void sw(unsigned int rs1, unsigned int rs2, unsigned int offset)
 {
-	memory[regMemory[rs1] + offset] = regMemory[rs2] & 0xFF;
-	memory[regMemory[rs1] + offset + 1] = regMemory[rs2] & 0xFF00;
-	memory[regMemory[rs1] + offset + 2] = regMemory[rs2] & 0xFF0000;
-	memory[regMemory[rs1] + offset + 3] = regMemory[rs2] & 0xFF000000;
-	cout << "\n" <<hex<< memory[regMemory[rs1] + offset] << "\n";
+	int temp = regMemory[rs1] + offset;
+	memory[temp] = regMemory[rs2];
+	memory[temp+1] = (regMemory[rs2]>>8);
+	memory[temp+2] = (regMemory[rs2]>>16);
+	memory[temp+3] = (regMemory[rs2] >>24);
+	cout << "\n" << hex << (int)memory[temp] << (int)memory[temp + 1]<< (int)memory[temp + 2] << (int)memory[temp + 3]<<"\n";
 
 }
 
@@ -293,6 +298,9 @@ void instDecExec(unsigned int instWord)
 	// — inst[31] — inst[30:25] inst[24:21] inst[20]
 	I_imm = ((instWord >> 20) & 0x7FF) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
 	S_imm = ((instWord >> 7) & 0x1F) | ((instWord >> 20) & 0xFE0) | (((instWord >> 31) ? 0xFFFFF000 : 0x0));
+	B_imm = ((instWord >> 7) & 0x1F) | ((instWord >> 20) & 0xFE0) | (((instWord >> 31) ? 0xFFFFF000 : 0x0));
+	B_imm=B_imm << 1;
+	B_imm += 1;
 
 	printPrefix(instPC, instWord);
 
@@ -391,7 +399,7 @@ void instDecExec(unsigned int instWord)
 
 		case 1:
 		{
-			cout << "\tSLLI\tx" << rd << ", x" << rs1 << "\n";
+			cout << "\tSLLI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
 			slli(rs1, rd, I_imm);
 
 			break;
@@ -426,13 +434,13 @@ void instDecExec(unsigned int instWord)
 		{
 			if (funct7 == 32)
 			{
-				cout << "\tSRAI\tx" << rd << ", x" << rs1 << "\n";
+				cout << "\tSRAI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
 				srai(rs1, rd, I_imm);
 
 			}
 			else
 			{
-				cout << "\tSRLI\tx" << rd << ", x" << rs1 << "\n";
+				cout << "\tSRLI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
 				srli(rs1, rd, I_imm);
 
 			}
@@ -629,8 +637,6 @@ void instDecExec(unsigned int instWord)
 int main()
 {
 
-
-
 	int argc = 2;
 	unsigned int instWord = 0;
 	ifstream inFile;
@@ -659,4 +665,8 @@ int main()
 		}
 	}
 	else emitError("Cannot access input file\n");
+
+	cout << (int)memory[100] << (int)memory[101] << (int)memory[102] << (int)memory[103];
+
+
 }
