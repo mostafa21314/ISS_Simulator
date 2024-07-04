@@ -1,12 +1,3 @@
-/*
-	This is just a skeleton. It DOES NOT implement all the requirements.
-	It only recognizes the RV32I "ADD", "SUB" and "ADDI" instructions only.
-	It prints "Unkown Instruction" for all other instructions!
-
-	References:
-	(1) The risc-v ISA Manual ver. 2.1 @ https://riscv.org/specifications/
-	(2) https://github.com/michaeljclark/riscv-meta/blob/master/meta/opcodes
-*/
 
 #include <iostream>
 #include <fstream>
@@ -33,15 +24,249 @@ void printPrefix(unsigned int instA, unsigned int instW) {
 
 void add(unsigned int rs1, unsigned int rs2, unsigned int rd)
 {
-
 	regMemory[rd] = regMemory[rs1] + regMemory[rs2];
-
-	cout << "\n" <<hex<< regMemory[rd]<<"\n";
+	cout << "\n" << hex << regMemory[rd] << "\n";
 }
+
+void sub(unsigned int rs1, unsigned int rs2, unsigned int rd)
+{
+	regMemory[rd] = regMemory[rs1] - regMemory[rs2];
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void sll(unsigned int rs1, unsigned int rs2, unsigned int rd)
+{
+	regMemory[rd] = regMemory[rs1] << (regMemory[rs2] & 0x1F);
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void slt(unsigned int rs1, unsigned int rs2, unsigned int rd)
+{
+	regMemory[rd] = (static_cast<int>(regMemory[rs1]) < static_cast<int>(regMemory[rs2])) ? 1 : 0;
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void sltu(unsigned int rs1, unsigned int rs2, unsigned int rd)
+{
+	regMemory[rd] = (regMemory[rs1] < regMemory[rs2]) ? 1 : 0;
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void xorFn(unsigned int rs1, unsigned int rs2, unsigned int rd)
+{
+	regMemory[rd] = regMemory[rs1] ^ regMemory[rs2];
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void srl(unsigned int rs1, unsigned int rs2, unsigned int rd)
+{
+	regMemory[rd] = regMemory[rs1] >> (regMemory[rs2] & 0x1F);
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void sra(unsigned int rs1, unsigned int rs2, unsigned int rd)
+{
+	regMemory[rd] = static_cast<int>(regMemory[rs1]) >> (regMemory[rs2] & 0x1F);
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void orFn(unsigned int rs1, unsigned int rs2, unsigned int rd)
+{
+	regMemory[rd] = regMemory[rs1] | regMemory[rs2];
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void andFn(unsigned int rs1, unsigned int rs2, unsigned int rd)
+{
+	regMemory[rd] = regMemory[rs1] & regMemory[rs2];
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
 void addi(unsigned int rs1, unsigned int rd, unsigned int immediate)
 {
 	regMemory[rd] = regMemory[rs1] + immediate;
-	cout << "\n" << hex<<regMemory[rd] << "\n";
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void slli(unsigned int rs1, unsigned int rd, unsigned int shamt)
+{
+	regMemory[rd] = regMemory[rs1] << (shamt & 0x1F);
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void slti(unsigned int rs1, unsigned int rd, unsigned int immediate)
+{
+	regMemory[rd] = (static_cast<int>(regMemory[rs1]) < static_cast<int>(immediate)) ? 1 : 0;
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void sltiu(unsigned int rs1, unsigned int rd, unsigned int immediate)
+{
+	regMemory[rd] = (regMemory[rs1] < immediate) ? 1 : 0;
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void xori(unsigned int rs1, unsigned int rd, unsigned int immediate)
+{
+	regMemory[rd] = regMemory[rs1] ^ immediate;
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void srli(unsigned int rs1, unsigned int rd, unsigned int shamt)
+{
+	regMemory[rd] = regMemory[rs1] >> (shamt & 0x1F);
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void srai(unsigned int rs1, unsigned int rd, unsigned int shamt)
+{
+	regMemory[rd] = static_cast<int>(regMemory[rs1]) >> (shamt & 0x1F);
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void ori(unsigned int rs1, unsigned int rd, unsigned int immediate)
+{
+	regMemory[rd] = regMemory[rs1] | immediate;
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void andi(unsigned int rs1, unsigned int rd, unsigned int immediate)
+{
+	regMemory[rd] = regMemory[rs1] & immediate;
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void sb(unsigned int rs1, unsigned int rs2, unsigned int offset)
+{
+	memory[regMemory[rs1] + offset] = regMemory[rs2] & 0xFF;
+	cout << "\n" << hex << memory[regMemory[rs1] + offset] << "\n";
+}
+
+void sh(unsigned int rs1, unsigned int rs2, unsigned int offset)
+{
+	memory[regMemory[rs1] + offset] = regMemory[rs2] & 0xFFFF;
+	cout << "\n" << hex << memory[regMemory[rs1] + offset] << "\n";
+}
+
+void sw(unsigned int rs1, unsigned int rs2, unsigned int offset)
+{
+	memory[regMemory[rs1] + offset] = regMemory[rs2];
+	cout << "\n" << hex << memory[regMemory[rs1] + offset] << "\n";
+}
+
+void beq(unsigned int rs1, unsigned int rs2, unsigned int offset)
+{
+	if (regMemory[rs1] == regMemory[rs2])
+	{
+		pc += offset;
+	}
+}
+
+void bne(unsigned int rs1, unsigned int rs2, unsigned int offset)
+{
+	if (regMemory[rs1] != regMemory[rs2])
+	{
+		pc += offset;
+	}
+}
+
+void blt(unsigned int rs1, unsigned int rs2, unsigned int offset)
+{
+	if (static_cast<int>(regMemory[rs1]) < static_cast<int>(regMemory[rs2]))
+	{
+		pc += offset;
+	}
+}
+
+void bge(unsigned int rs1, unsigned int rs2, unsigned int offset)
+{
+	if (static_cast<int>(regMemory[rs1]) >= static_cast<int>(regMemory[rs2]))
+	{
+		pc += offset;
+	}
+}
+
+void bltu(unsigned int rs1, unsigned int rs2, unsigned int offset)
+{
+	if (regMemory[rs1] < regMemory[rs2])
+	{
+		pc += offset;
+	}
+}
+
+void bgeu(unsigned int rs1, unsigned int rs2, unsigned int offset)
+{
+	if (regMemory[rs1] >= regMemory[rs2])
+	{
+		pc += offset;
+	}
+}
+
+void lui(unsigned int rd, unsigned int immediate)
+{
+	regMemory[rd] = immediate << 12;
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void auipc(unsigned int rd, unsigned int immediate)
+{
+	regMemory[rd] = pc + (immediate << 12);
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void jal(unsigned int rd, unsigned int immediate)
+{
+	regMemory[rd] = pc + 4;
+	pc += immediate;
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void jalr(unsigned int rd, unsigned int rs1, unsigned int immediate)
+{
+	regMemory[rd] = pc + 4;
+	pc = (regMemory[rs1] + immediate) & ~1;
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void lb(unsigned int rs1, unsigned int rd, unsigned int offset)
+{
+	int address = regMemory[rs1] + offset;
+	regMemory[rd] = static_cast<int>(memory[address]);
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void lh(unsigned int rs1, unsigned int rd, unsigned int offset)
+{
+	int address = regMemory[rs1] + offset;
+	regMemory[rd] = static_cast<int>(memory[address] | (memory[address + 1] << 8));
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void lw(unsigned int rs1, unsigned int rd, unsigned int offset)
+{
+	int address = regMemory[rs1] + offset;
+	regMemory[rd] = static_cast<int>(memory[address] | (memory[address + 1] << 8) | (memory[address + 2] << 16) | (memory[address + 3] << 24));
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void lbu(unsigned int rs1, unsigned int rd, unsigned int offset)
+{
+	int address = regMemory[rs1] + offset;
+	regMemory[rd] = memory[address];
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void lhu(unsigned int rs1, unsigned int rd, unsigned int offset)
+{
+	int address = regMemory[rs1] + offset;
+	regMemory[rd] = memory[address] | (memory[address + 1] << 8);
+	cout << "\n" << hex << regMemory[rd] << "\n";
+}
+
+void ecall()
+{
+	cout << "\n" << hex << "0x" << regMemory[17] << "\n";
+
 }
 void instDecExec(unsigned int instWord)
 {
@@ -58,7 +283,7 @@ void instDecExec(unsigned int instWord)
 	rs2 = (instWord >> 20) & 0x0000001F;
 	funct7 = (instWord >> 25) & 0x0000007F;
 
-	// — inst[31] — inst[30:25] inst[24:21] inst[20]
+	// â€” inst[31] â€” inst[30:25] inst[24:21] inst[20]
 	I_imm = ((instWord >> 20) & 0x7FF) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
 
 	printPrefix(instPC, instWord);
@@ -381,4 +606,4 @@ int main()
 		}
 	}
 	else emitError("Cannot access input file\n");
-} 
+} hala
