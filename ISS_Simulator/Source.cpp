@@ -12,10 +12,12 @@
 #include <fstream>
 #include "stdlib.h"
 #include <iomanip>
+#include<string>
 
 using namespace std;
 unsigned int pc;
 unsigned char memory[(16 + 64) * 1024];
+unsigned int regMemory[32];
 
 void emitError(string s)
 {
@@ -27,6 +29,20 @@ void printPrefix(unsigned int instA, unsigned int instW) {
 	cout << "0x" << hex << std::setfill('0') << std::setw(8) << instA << "\t0x" << std::setw(8) << instW;
 }
 
+
+
+void add(unsigned int rs1, unsigned int rs2, unsigned int rd)
+{
+
+	regMemory[rd] = regMemory[rs1] + regMemory[rs2];
+
+	cout << "\n" <<hex<< regMemory[rd]<<"\n";
+}
+void addi(unsigned int rs1, unsigned int rd, unsigned int immediate)
+{
+	regMemory[rd] = regMemory[rs1] + immediate;
+	cout << "\n" << hex<<regMemory[rd] << "\n";
+}
 void instDecExec(unsigned int instWord)
 {
 	unsigned int rd, rs1, rs2, funct3, funct7, opcode;
@@ -48,10 +64,10 @@ void instDecExec(unsigned int instWord)
 	printPrefix(instPC, instWord);
 
 	if (opcode == 0x33)    	// R Instructions
-	{	
-		switch (funct3) 
+	{
+		switch (funct3)
 		{
-		case 0: 
+		case 0:
 		{
 			if (funct7 == 32)
 			{
@@ -60,11 +76,12 @@ void instDecExec(unsigned int instWord)
 			else
 			{
 				cout << "\tADD\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+				add(rs1, rs2, rd);
 			}
 			break;
 		}
 
-		case 1: 
+		case 1:
 		{
 			cout << "\tSLL\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
 			break;
@@ -76,7 +93,7 @@ void instDecExec(unsigned int instWord)
 			break;
 		}
 
-		case 3: 
+		case 3:
 		{
 			cout << "\tSLTU\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
 			break;
@@ -119,19 +136,20 @@ void instDecExec(unsigned int instWord)
 		}
 	}
 	else if (opcode == 0x13)   // I instructions
-	{	
-		switch (funct3) 
-		
+	{
+		switch (funct3)
+
 		{
 		case 0:
 		{
 			cout << "\tADDI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			addi(rs1, rd, I_imm);
 			break;
 		}
 
 		case 1:
 		{
-			cout << "\tSLLI\tx" << rd << ", x" << rs1 <<"\n";
+			cout << "\tSLLI\tx" << rd << ", x" << rs1 << "\n";
 			break;
 		}
 
@@ -158,11 +176,11 @@ void instDecExec(unsigned int instWord)
 		{
 			if (funct7 == 32)
 			{
-				cout << "\tSRAI\tx" << rd << ", x" << rs1 <<"\n";
+				cout << "\tSRAI\tx" << rd << ", x" << rs1 << "\n";
 			}
 			else
 			{
-				cout << "\tSRLI\tx" << rd << ", x" << rs1 <<"\n";
+				cout << "\tSRLI\tx" << rd << ", x" << rs1 << "\n";
 			}
 			break;
 		}
@@ -284,7 +302,7 @@ void instDecExec(unsigned int instWord)
 		{
 			cout << "\tLB\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
 			break;
-			
+
 		}
 
 		case 1:
@@ -315,7 +333,7 @@ void instDecExec(unsigned int instWord)
 		default:
 			cout << "\tUnkown I Instruction \n";
 		}
-    }
+	}
 
 
 	else if (opcode == 0x73) // ecall
@@ -323,22 +341,26 @@ void instDecExec(unsigned int instWord)
 		cout << "\tECALL\t\n";
 
 	}
-	else 
+	else
 	{
 		cout << "\tUnkown Instruction \n";
 	}
 
 }
 
-int main(int argc, char* argv[]) {
 
+
+int main()
+{
+
+	int argc = 2;
 	unsigned int instWord = 0;
 	ifstream inFile;
 	ofstream outFile;
 
 	if (argc < 1) emitError("use: rvcdiss <machine_code_file_name>\n");
 
-	inFile.open(argv[1], ios::in | ios::binary | ios::ate);
+	inFile.open("C:/Users/mosta/Desktop/badawy.bin", ios::in | ios::binary | ios::ate);
 
 	if (inFile.is_open())
 	{
@@ -359,4 +381,4 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	else emitError("Cannot access input file\n");
-} hala
+} 
