@@ -170,7 +170,7 @@ void beq(unsigned int rs1, unsigned int rs2, unsigned int offset)
 {
 	if (regMemory[rs1] == regMemory[rs2])
 	{
-		pc += offset;
+		pc += 4 * offset;
 	}
 }
 
@@ -178,7 +178,7 @@ void bne(unsigned int rs1, unsigned int rs2, unsigned int offset)
 {
 	if (regMemory[rs1] != regMemory[rs2])
 	{
-		pc += offset;
+		pc += 4 * offset;
 	}
 }
 
@@ -186,7 +186,7 @@ void blt(unsigned int rs1, unsigned int rs2, unsigned int offset)
 {
 	if (static_cast<int>(regMemory[rs1]) < static_cast<int>(regMemory[rs2]))
 	{
-		pc += offset;
+		pc += 4 * offset;
 	}
 }
 
@@ -194,7 +194,7 @@ void bge(unsigned int rs1, unsigned int rs2, unsigned int offset)
 {
 	if (static_cast<int>(regMemory[rs1]) >= static_cast<int>(regMemory[rs2]))
 	{
-		pc += offset;
+		pc += 4 * offset;
 	}
 }
 
@@ -202,7 +202,7 @@ void bltu(unsigned int rs1, unsigned int rs2, unsigned int offset)
 {
 	if (regMemory[rs1] < regMemory[rs2])
 	{
-		pc += offset;
+		pc += 4 * offset;
 	}
 }
 
@@ -298,9 +298,11 @@ void instDecExec(unsigned int instWord)
 	// — inst[31] — inst[30:25] inst[24:21] inst[20]
 	I_imm = ((instWord >> 20) & 0x7FF) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
 	S_imm = ((instWord >> 7) & 0x1F) | ((instWord >> 20) & 0xFE0) | (((instWord >> 31) ? 0xFFFFF000 : 0x0));
-	B_imm = ((instWord >> 7) & 0x1F) | ((instWord >> 20) & 0xFE0) | (((instWord >> 31) ? 0xFFFFF000 : 0x0));
-	B_imm=B_imm << 1;
-	B_imm += 1;
+	B_imm = 0x0 | ((instWord >> 6) & 0x1E) | ((instWord >> 20) & 0x7E0) | ((instWord << 4) & 0x800) | ((instWord >> 19) & 0x1000);
+	if (B_imm & 0x1000) 
+	{
+		B_imm |= 0xFFFFE000; // Sign-extend to 32 bits
+	}
 
 	printPrefix(instPC, instWord);
 
@@ -499,44 +501,44 @@ void instDecExec(unsigned int instWord)
 		{
 		case 0:
 		{
-			cout << "\tBEQ\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)I_imm << "\n";
-			beq(rs1, rs2, I_imm);
+			cout << "\tBEQ\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << "\n";
+			beq(rs1, rs2, B_imm);
 			break;
 		}
 
 		case 1:
 		{
-			cout << "\tBNE\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)I_imm << "\n";
-			bne(rs1, rs2, I_imm);
+			cout << "\tBNE\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << "\n";
+			bne(rs1, rs2, B_imm);
 			break;
 
 		}
 
 		case 4:
 		{
-			cout << "\tBLT\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)I_imm << "\n";
-			blt(rs1, rs2, I_imm);
+			cout << "\tBLT\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << "\n";
+			blt(rs1, rs2, B_imm);
 			break;
 		}
 
 		case 5:
 		{
-			cout << "\tBGE\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)I_imm << "\n";
-			bge(rs1, rs2, I_imm);
+			cout << "\tBGE\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << "\n";
+			bge(rs1, rs2, B_imm);
 			break;
 		}
 
 		case 6:
 		{
-			cout << "\tBLTU\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)I_imm << "\n";
-			bltu(rs1, rs2, I_imm);
+			cout << "\tBLTU\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << "\n";
+			bltu(rs1, rs2, B_imm);
 			break;
 		}
 
 		case 7:
 		{
-			cout << "\tBGEU\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)I_imm << "\n";
-			bgeu(rs1, rs2, I_imm);
+			cout << "\tBGEU\tx" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << "\n";
+			bgeu(rs1, rs2, B_imm);
 			break;
 		}
 
@@ -660,7 +662,7 @@ int main()
 				(((unsigned char)memory[pc + 3]) << 24);
 			pc += 4;
 			// remove the following line once you have a complete simulator
-			if (pc == 128) break;			// stop when PC reached address 32
+			if (pc >= 128) break;			// stop when PC reached address 32
 			instDecExec(instWord);
 		}
 	}
