@@ -210,32 +210,37 @@ void bgeu(unsigned int rs1, unsigned int rs2, unsigned int offset)
 {
 	if (regMemory[rs1] >= regMemory[rs2])
 	{
-		pc += offset;
+		pc += 4 * offset;
 	}
 }
 
 void lui(unsigned int rd, unsigned int immediate)
 {
-	regMemory[rd] = immediate << 12;
+	regMemory[rd] = immediate ;
 	cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void auipc(unsigned int rd, unsigned int immediate)
 {
-	regMemory[rd] = pc + (immediate << 12);
+	regMemory[rd] = pc + immediate ;
 	cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void jal(unsigned int rd, unsigned int immediate)
 {
+	if (rd != 0)
 	regMemory[rd] = pc + 4;
+
 	pc += immediate;
 	cout << "\n" << hex << regMemory[rd] << "\n";
+	cout << endl << pc << endl;
 }
 
 void jalr(unsigned int rd, unsigned int rs1, unsigned int immediate)
 {
+	if(rd!=0)
 	regMemory[rd] = pc + 4;
+
 	pc = (regMemory[rs1] + immediate) & ~1;
 	cout << "\n" << hex << regMemory[rd] << "\n";
 }
@@ -243,35 +248,59 @@ void jalr(unsigned int rd, unsigned int rs1, unsigned int immediate)
 void lb(unsigned int rs1, unsigned int rd, unsigned int offset)
 {
 	int address = regMemory[rs1] + offset;
-	regMemory[rd] = static_cast<int>(memory[address]);
+	if(rd!=0)
+	{
+		regMemory[rd] = static_cast<int>(memory[address]);
+		if (memory[address] & 0x80)
+			regMemory[rd] = regMemory[rd] | 0xFFFFFF00;
+		else
+			regMemory[rd] = regMemory[rd] & 0x000000FF;
+	}
 	cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void lh(unsigned int rs1, unsigned int rd, unsigned int offset)
 {
 	int address = regMemory[rs1] + offset;
-	regMemory[rd] = static_cast<int>(memory[address] | (memory[address + 1] << 8));
+	if(rd!=0)
+	{
+		regMemory[rd] = static_cast<int>(memory[address] | (memory[address+1] << 8));
+		if (memory[address + 1] & 0x80)
+			regMemory[rd] = regMemory[rd] | 0xFFFF0000;
+		else
+			regMemory[rd] = regMemory[rd] & 0x0000FFFF;
+	}
 	cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void lw(unsigned int rs1, unsigned int rd, unsigned int offset)
 {
 	int address = regMemory[rs1] + offset;
-	regMemory[rd] = static_cast<int>(memory[address] | (memory[address + 1] << 8) | (memory[address + 2] << 16) | (memory[address + 3] << 24));
+	if (rd != 0)
+		regMemory[rd] = static_cast<int>(memory[address] | (memory[address+1] << 8)) | (memory[address+2] << 16) | (memory[address+3] << 24);
+
 	cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void lbu(unsigned int rs1, unsigned int rd, unsigned int offset)
 {
 	int address = regMemory[rs1] + offset;
-	regMemory[rd] = memory[address];
+	if (rd != 0)
+	{
+		regMemory[rd] = static_cast<int>(memory[address]);
+	    regMemory[rd] = regMemory[rd] & 0x000000FF;
+	}
 	cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void lhu(unsigned int rs1, unsigned int rd, unsigned int offset)
 {
 	int address = regMemory[rs1] + offset;
-	regMemory[rd] = memory[address] | (memory[address + 1] << 8);
+	if (rd != 0)
+	{
+		regMemory[rd] = static_cast<int>(memory[address + 1] | (memory[address] << 8));
+	    regMemory[rd] = regMemory[rd] & 0x0000FFFF;
+	}
 	cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
@@ -299,10 +328,25 @@ void instDecExec(unsigned int instWord)
 	I_imm = ((instWord >> 20) & 0x7FF) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
 	S_imm = ((instWord >> 7) & 0x1F) | ((instWord >> 20) & 0xFE0) | (((instWord >> 31) ? 0xFFFFF000 : 0x0));
 	B_imm = 0x0 | ((instWord >> 6) & 0x1E) | ((instWord >> 20) & 0x7E0) | ((instWord << 4) & 0x800) | ((instWord >> 19) & 0x1000);
-	if (B_imm & 0x1000) 
+	if (B_imm & 0x1000)
 	{
 		B_imm |= 0xFFFFE000; // Sign-extend to 32 bits
 	}
+	U_imm = instWord & 0xFFFFF000;
+
+
+	J_imm = (instWord & 0xFF000)          // bits 19-12
+		| ((instWord >> 9) & 0x800)    // bit 11
+		| ((instWord >> 20) & 0x7FE)   // bits 10-1
+		| ((instWord >> 11) & 0x100000); // bit 20
+
+	// Adjust for sign extension if necessary
+	if (instWord & 0x80000000) { // Check if the sign bit (bit 31) is set
+		J_imm |= 0xFFF00000; // Set the upper bits for sign extension
+	}
+
+	J_imm &= 0xFFFFFFFE; // Ensure the least significant bit is zero
+
 
 	printPrefix(instPC, instWord);
 
@@ -547,21 +591,21 @@ void instDecExec(unsigned int instWord)
 	}
 	else if (opcode == 0x37)   //LUI
 	{
-		cout << "\tLUI\tx" << rd << ", " << hex << "0x" << (int)I_imm << "\n";
-		lui(rd, I_imm);
+		cout << "\tLUI\tx" << rd << ", " << hex << "0x" << (int)U_imm << "\n";
+		lui(rd, U_imm);
 
 	}
 	else if (opcode == 0x17)  //AUIPC
 	{
-		cout << "\tAUIBC\tx" << rd << ", " << hex << "0x" << (int)I_imm << "\n";
-		auipc(rd, I_imm);
+		cout << "\tAUIBC\tx" << rd << ", " << hex << "0x" << (int)U_imm << "\n";
+		auipc(rd, U_imm);
 
 
 	}
 	else if (opcode == 0x6F)   //   JAL
 	{
-		cout << "\tJAL\tx" << rd << ", " << hex << "0x" << (int)I_imm << "\n";
-		jal(rd, I_imm);
+		cout << "\tJAL\tx" << rd << ", " << hex << "0x" << (int)J_imm << "\n";
+		jal(rd, J_imm);
 
 
 	}
@@ -662,7 +706,7 @@ int main()
 				(((unsigned char)memory[pc + 3]) << 24);
 			pc += 4;
 			// remove the following line once you have a complete simulator
-			if (pc >= 128) break;			// stop when PC reached address 32
+			if (pc >= 256) break;			// stop when PC reached address 32
 			instDecExec(instWord);
 		}
 	}
