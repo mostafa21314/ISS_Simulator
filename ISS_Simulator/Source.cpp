@@ -25,54 +25,63 @@ void printPrefix(unsigned int instA, unsigned int instW)
 
 void add(unsigned int rs1, unsigned int rs2, unsigned int rd)
 {
+	if(rd!=0)
 	regMemory[rd] = regMemory[rs1] + regMemory[rs2];
 	//cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void sub(unsigned int rs1, unsigned int rs2, unsigned int rd)
 {
+	if (rd != 0)
 	regMemory[rd] = regMemory[rs1] - regMemory[rs2];
 //	cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void sll(unsigned int rs1, unsigned int rs2, unsigned int rd)
 {
+	if (rd != 0)
 	regMemory[rd] = regMemory[rs1] << (regMemory[rs2] & 0x1F);
 //	cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void slt(unsigned int rs1, unsigned int rs2, unsigned int rd)
 {
+	if (rd != 0)
 	regMemory[rd] = (static_cast<int>(regMemory[rs1]) < static_cast<int>(regMemory[rs2])) ? 1 : 0;
 //	cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void sltu(unsigned int rs1, unsigned int rs2, unsigned int rd)
 {
+	if (rd != 0)
 	regMemory[rd] = (regMemory[rs1] < regMemory[rs2]) ? 1 : 0;
 	//cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void xorFn(unsigned int rs1, unsigned int rs2, unsigned int rd)
 {
+	if (rd != 0)
 	regMemory[rd] = regMemory[rs1] ^ regMemory[rs2];
 	//cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void srl(unsigned int rs1, unsigned int rs2, unsigned int rd)
 {
+	if (rd != 0)
 	regMemory[rd] = regMemory[rs1] >> (regMemory[rs2] & 0x1F);
 	//cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void sra(unsigned int rs1, unsigned int rs2, unsigned int rd)
 {
+	if (rd != 0)
 	regMemory[rd] = static_cast<int>(regMemory[rs1]) >> (regMemory[rs2] & 0x1F);
 	//cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void orFn(unsigned int rs1, unsigned int rs2, unsigned int rd)
 {
+	if (rd != 0)
 	regMemory[rd] = regMemory[rs1] | regMemory[rs2];
 //	cout << "\n" << hex << regMemory[rd] << "\n";
 }
@@ -85,54 +94,63 @@ void andFn(unsigned int rs1, unsigned int rs2, unsigned int rd)
 
 void addi(unsigned int rs1, unsigned int rd, unsigned int immediate)
 {
+	if (rd != 0)
 	regMemory[rd] = regMemory[rs1] + immediate;
 //	cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void slli(unsigned int rs1, unsigned int rd, unsigned int shamt)
 {
+	if (rd != 0)
 	regMemory[rd] = regMemory[rs1] << (shamt & 0x1F);
 	//cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void slti(unsigned int rs1, unsigned int rd, unsigned int immediate)
 {
+	if (rd != 0)
 	regMemory[rd] = (static_cast<int>(regMemory[rs1]) < static_cast<int>(immediate)) ? 1 : 0;
 	//cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void sltiu(unsigned int rs1, unsigned int rd, unsigned int immediate)
 {
+	if (rd != 0)
 	regMemory[rd] = (regMemory[rs1] < immediate) ? 1 : 0;
 	//cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void xori(unsigned int rs1, unsigned int rd, unsigned int immediate)
 {
+	if (rd != 0)
 	regMemory[rd] = regMemory[rs1] ^ immediate;
 //	cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void srli(unsigned int rs1, unsigned int rd, unsigned int shamt)
 {
+	if (rd != 0)
 	regMemory[rd] = regMemory[rs1] >> (shamt & 0x1F);
 	//cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void srai(unsigned int rs1, unsigned int rd, unsigned int shamt)
 {
+	if (rd != 0)
 	regMemory[rd] = static_cast<int>(regMemory[rs1]) >> (shamt & 0x1F);
 	//cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void ori(unsigned int rs1, unsigned int rd, unsigned int immediate)
 {
+	if (rd != 0)
 	regMemory[rd] = regMemory[rs1] | immediate;
 	//cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void andi(unsigned int rs1, unsigned int rd, unsigned int immediate)
 {
+	if (rd != 0)
 	regMemory[rd] = regMemory[rs1] & immediate;
 //	cout << "\n" << hex << regMemory[rd] << "\n";
 }
@@ -141,7 +159,7 @@ void sb(unsigned int rs1, unsigned int rs2, unsigned int offset)
 {
 	int temp = regMemory[rs1] + offset;
 	memory[temp] = regMemory[rs2];
-	cout << "\n" << hex << (int)memory[temp] << "\n";
+	//cout << "\n" << hex << (int)memory[temp] << "\n";
 	//cout << endl << (int)regMemory[rs2] << endl;
 
 }
@@ -168,6 +186,8 @@ void sw(unsigned int rs1, unsigned int rs2, unsigned int offset)
 
 void beq(unsigned int rs1, unsigned int rs2, unsigned int offset)
 {
+
+	cout << endl << endl << regMemory[rs1] << "   " << regMemory[rs2] << endl << endl << endl;
 	if (regMemory[rs1] == regMemory[rs2])
 	{
 		pc +=  offset-4;
@@ -216,18 +236,21 @@ void bgeu(unsigned int rs1, unsigned int rs2, unsigned int offset)
 
 void lui(unsigned int rd, unsigned int immediate)
 {
+	if (rd != 0)
 	regMemory[rd] = immediate ;
 	//cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void auipc(unsigned int rd, unsigned int immediate)
 {
+	if (rd != 0)
 	regMemory[rd] = pc + immediate -4  ;
 	//cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
 void jal(unsigned int rd, unsigned int immediate)
 {
+	
 	if (rd != 0)
 	regMemory[rd] = pc ;
 	pc += immediate-4;
@@ -246,7 +269,7 @@ void jalr(unsigned int rd, unsigned int rs1, unsigned int immediate)
 
 void lb(unsigned int rs1, unsigned int rd, unsigned int offset)
 {
-	int address = regMemory[rs1] + offset;
+	int address = regMemory[rs1] + offset+1;
 	if(rd!=0)
 	{
 		regMemory[rd] = static_cast<int>(memory[address]);
@@ -255,12 +278,21 @@ void lb(unsigned int rs1, unsigned int rd, unsigned int offset)
 		else
 			regMemory[rd] = regMemory[rd] & 0x000000FF;
 	}
-	//cout << "\n" << hex << regMemory[rd] << "\n";
+	/*cout << "\n" << (char)regMemory[rd] <<(char)memory[address] <<"+0\n";
+	cout << "\n"  << (char)memory[address+1] << "+1\n";
+	cout << "\n" << (char)memory[address-1] << "-1\n";
+	cout << "\n" << (char)memory[address+2] << "+2\n";
+	cout << "\n"  << (char)memory[address -2] << "-2\n";*/
+
+	cout << "\n" << (char)regMemory[rd] << "\n";
+
+
+
 }
 
 void lh(unsigned int rs1, unsigned int rd, unsigned int offset)
 {
-	int address = regMemory[rs1] + offset;
+	int address = regMemory[rs1] + offset+1;
 	if(rd!=0)
 	{
 		regMemory[rd] = static_cast<int>(memory[address] | (memory[address+1] << 8));
@@ -269,7 +301,7 @@ void lh(unsigned int rs1, unsigned int rd, unsigned int offset)
 		else
 			regMemory[rd] = regMemory[rd] & 0x0000FFFF;
 	}
-	//cout << "\n" << hex << regMemory[rd] << "\n";
+	cout << "\n" << hex << (char)regMemory[rd] << (char)(regMemory[rd] >> 8) << "\n";
 }
 
 void lw(unsigned int rs1, unsigned int rd, unsigned int offset)
@@ -278,29 +310,29 @@ void lw(unsigned int rs1, unsigned int rd, unsigned int offset)
 	if (rd != 0)
 		regMemory[rd] = static_cast<int>(memory[address] | (memory[address+1] << 8)) | (memory[address+2] << 16) | (memory[address+3] << 24);
 
-	//cout << "\n" << hex << regMemory[rd] << "\n";
+	cout << "\n" << hex << (char)regMemory[rd] << (char)(regMemory[rd] >> 8) << (char)(regMemory[rd] >> 16) << (char)(regMemory[rd] >> 24) << "\n";
 }
 
 void lbu(unsigned int rs1, unsigned int rd, unsigned int offset)
 {
-	int address = regMemory[rs1] + offset;
+	int address = regMemory[rs1] + offset+1;
 	if (rd != 0)
 	{
 		regMemory[rd] = static_cast<int>(memory[address]);
 	    regMemory[rd] = regMemory[rd] & 0x000000FF;
 	}
-	//cout << "\n" << hex << regMemory[rd] << "\n";
+	cout << "\n" << (char)regMemory[rd] << "\n";
 }
 
 void lhu(unsigned int rs1, unsigned int rd, unsigned int offset)
 {
-	int address = regMemory[rs1] + offset;
+	int address = regMemory[rs1] + offset+1;
 	if (rd != 0)
 	{
-		regMemory[rd] = static_cast<int>(memory[address + 1] | (memory[address] << 8));
+		regMemory[rd] = static_cast<int>(memory[address] | (memory[address+1] << 8));
 	    regMemory[rd] = regMemory[rd] & 0x0000FFFF;
 	}
-	//cout << "\n" << hex << regMemory[rd] << "\n";
+	cout << "\n" << hex << (char)regMemory[rd]<<(char)(regMemory[rd]>>8) << "\n";
 }
 
 void ecall()
@@ -310,7 +342,7 @@ void ecall()
 	{
 	case 1:
 	{
-		cout << (int)regMemory[10];
+		cout <<endl<< (int)regMemory[10]<<endl;
 		break;
 	}
 	case 4:
@@ -318,6 +350,7 @@ void ecall()
 		int i = 0;
 		while (memory[regMemory[10] + i] != NULL)
 			cout << memory[regMemory[10] + i++];
+		cout << endl;
 		break;
 	}
 	case 5:
@@ -330,7 +363,7 @@ void ecall()
 		int i = regMemory[11];
 		int j = 0;
 		string s;
-		cin >> s;
+		getline(cin, s);	
 		while (i != 0)
 		{
 			if (j >= s.size())
@@ -341,8 +374,39 @@ void ecall()
 		break;
 	}
 
+	case 10:
+	{
+		exit(0);
+		break;
 	}
-	cout << "\n" << hex << "0x" << regMemory[17] << "\n";
+
+	case 11:
+	{
+		cout << (char)regMemory[10];
+		break;
+	}
+	case 12:
+	{
+		char h;
+		cin >> h;
+		regMemory[10] = h;
+		break;
+	}
+
+	case 93: 
+		{
+			exit(regMemory[10]);
+			break;
+		}
+
+	default : 
+	{
+		cout << regMemory[17] << endl;
+		exit(0);
+	}
+	}
+	
+	//cout << "\n" << hex << "0x" << regMemory[17] << "\n";
 
 }
 void instDecExec(unsigned int instWord)
@@ -702,8 +766,14 @@ void instDecExec(unsigned int instWord)
 
 	else if (opcode == 0x73) // ecall
 	{
-		cout << "\tECALL\t\n";
+		cout << "\tECALL\ta7 = "<<regMemory[17]<<",\t a0 = "<<regMemory[10]<<endl;
 		ecall();
+		/*for (int i = 8192; i < 10000; i += 1)
+		{
+			lb(0, 2, i);
+			cout << (char)regMemory[2];
+		}
+		cout << endl << endl;*/
 
 	}
 	else
@@ -723,7 +793,7 @@ int main()
 	ifstream inData;
 	ofstream outFile;
 
-	inData.open("C:/Users/mosta/Desktop/data.bin", ios::in | ios::binary | ios::ate);
+	inData.open("C:/Users/mosta/Downloads/samples/t1-d.bin", ios::in | ios::binary | ios::ate);
 
 	if (inData.is_open())
 	{
@@ -735,10 +805,13 @@ int main()
 
 	}
 	else emitError("Cannot access input Data file\n");
+	regMemory[2] = 16380;
 
 	//cout << "\n\n\n\n\n\n" << memory[8192] << memory[8193] << memory[8194] << memory[8195] << memory[8196]<< "\n\n\n\n\n";
+		
 
-	inFile.open("C:/Users/mosta/Desktop/badawy.bin", ios::in | ios::binary | ios::ate);
+
+	inFile.open("C:/Users/mosta/Downloads/samples/t2.bin", ios::in | ios::binary | ios::ate);
 
 	if (inFile.is_open())
 	{
@@ -755,7 +828,7 @@ int main()
 				(((unsigned char)memory[pc + 3]) << 24);
 			pc += 4;
 			// remove the following line once you have a complete simulator
-			if (pc >= 256) break;			// stop when PC reached address 32
+			if (pc >= 1024) break;			// stop when PC reached address 32
 			instDecExec(instWord);
 		}
 	}
