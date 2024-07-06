@@ -222,7 +222,7 @@ void lui(unsigned int rd, unsigned int immediate)
 
 void auipc(unsigned int rd, unsigned int immediate)
 {
-	regMemory[rd] = pc + immediate ;
+	regMemory[rd] = pc + immediate -4  ;
 	cout << "\n" << hex << regMemory[rd] << "\n";
 }
 
@@ -306,6 +306,43 @@ void lhu(unsigned int rs1, unsigned int rd, unsigned int offset)
 
 void ecall()
 {
+
+	switch (regMemory[17])
+	{
+	case 1:
+	{
+		cout << (int)regMemory[10];
+		break;
+	}
+	case 4:
+	{
+		int i = 0;
+		while (memory[regMemory[10] + i] != 0)
+			cout << memory[regMemory[10] + i];
+		break;
+	}
+	case 5:
+	{
+		cin >> regMemory[10];
+		break;
+	}
+	case 8:
+	{
+		int i = regMemory[11];
+		int j = 0;
+		string s;
+		cin >> s;
+		while (i != 0)
+		{
+			if (j >= s.size())
+				return;
+			memory[regMemory[10] + j] = s.at(j++);
+			i--;
+		}
+		break;
+	}
+
+	}
 	cout << "\n" << hex << "0x" << regMemory[17] << "\n";
 
 }
@@ -683,12 +720,25 @@ void instDecExec(unsigned int instWord)
 int main()
 {
 
-	int argc = 2;
 	unsigned int instWord = 0;
 	ifstream inFile;
+	ifstream inData;
 	ofstream outFile;
 
-	if (argc < 1) emitError("use: rvcdiss <machine_code_file_name>\n");
+	inData.open("C:/Users/mosta/Desktop/data.bin", ios::in | ios::binary | ios::ate);
+
+	if (inData.is_open())
+	{
+		int fsize = inData.tellg();
+
+		inData.seekg(0, inData.beg);
+		if (!inData.read((char*)(memory+8192), fsize))
+			emitError("Cannot read from input file\n");
+
+	}
+	else emitError("Cannot access input Data file\n");
+
+	//cout << "\n\n\n\n\n\n" << memory[8192] << memory[8193] << memory[8194] << memory[8195] << memory[8196]<< "\n\n\n\n\n";
 
 	inFile.open("C:/Users/mosta/Desktop/badawy.bin", ios::in | ios::binary | ios::ate);
 
@@ -697,7 +747,8 @@ int main()
 		int fsize = inFile.tellg();
 
 		inFile.seekg(0, inFile.beg);
-		if (!inFile.read((char*)memory, fsize)) emitError("Cannot read from input file\n");
+		if (!inFile.read((char*)memory, fsize))
+		emitError("Cannot read from input file\n");
 
 		while (true) {
 			instWord = (unsigned char)memory[pc] |
