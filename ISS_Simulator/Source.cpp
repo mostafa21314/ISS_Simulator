@@ -7,7 +7,7 @@
 
 using namespace std;
 unsigned int pc=0;
-unsigned char memory[(16 + 64) * 1024] = { 65 };
+unsigned char memory[(16 * 64) * 1024] = { 65 };
 unsigned int regMemory[32] = { 0 };
 
 void emitError(string s)
@@ -157,7 +157,7 @@ void andi(unsigned int rs1, unsigned int rd, unsigned int immediate)
 
 void sb(unsigned int rs1, unsigned int rs2, unsigned int offset)
 {
-	int temp = regMemory[rs1] + offset;
+	int temp = regMemory[rs1] + offset+1;
 	memory[temp] = regMemory[rs2];
 	//cout << "\n" << hex << (int)memory[temp] << "\n";
 	//cout << endl << (int)regMemory[rs2] << endl;
@@ -166,7 +166,7 @@ void sb(unsigned int rs1, unsigned int rs2, unsigned int offset)
 
 void sh(unsigned int rs1, unsigned int rs2, unsigned int offset)
 {
-	int temp = regMemory[rs1] + offset;
+	int temp = regMemory[rs1] + offset+1;
 	memory[temp] =  regMemory[rs2];
 	memory[temp + 1] = (regMemory[rs2] >> 8);
 //	cout << "\n" << hex << (int)memory[temp] <<(int)memory[temp+1]<< "\n";
@@ -175,7 +175,7 @@ void sh(unsigned int rs1, unsigned int rs2, unsigned int offset)
 
 void sw(unsigned int rs1, unsigned int rs2, unsigned int offset)
 {
-	int temp = regMemory[rs1] + offset;
+	int temp = regMemory[rs1] + offset+1;
 	memory[temp] = regMemory[rs2];
 	memory[temp+1] = (regMemory[rs2]>>8);
 	memory[temp+2] = (regMemory[rs2]>>16);
@@ -306,7 +306,7 @@ void lh(unsigned int rs1, unsigned int rd, unsigned int offset)
 
 void lw(unsigned int rs1, unsigned int rd, unsigned int offset)
 {
-	int address = regMemory[rs1] + offset;
+	int address = regMemory[rs1] + offset+1;
 	if (rd != 0)
 		regMemory[rd] = static_cast<int>(memory[address] | (memory[address+1] << 8)) | (memory[address+2] << 16) | (memory[address+3] << 24);
 
@@ -783,7 +783,8 @@ void instDecExec(unsigned int instWord)
 
 }
 
-
+// g++ -o riscsim ... names of files
+// ./riscsim names of files
 
 int main()
 {
@@ -793,14 +794,15 @@ int main()
 	ifstream inData;
 	ofstream outFile;
 
-	inData.open("C:/Users/mosta/Downloads/samples/t1-d.bin", ios::in | ios::binary | ios::ate);
+	inData.open("C:/Users/mosta/Downloads/tests-rv32i/tests-rv32i/t4-d.bin", ios::in | ios::binary | ios::ate);
 
+	 
 	if (inData.is_open())
 	{
 		int fsize = inData.tellg();
 
 		inData.seekg(0, inData.beg);
-		if (!inData.read((char*)(memory+8192), fsize))
+		if (!inData.read((char*)(memory+65536), fsize))
 			emitError("Cannot read from input file\n");
 
 	}
@@ -811,7 +813,7 @@ int main()
 		
 
 
-	inFile.open("C:/Users/mosta/Downloads/samples/t2.bin", ios::in | ios::binary | ios::ate);
+	inFile.open("C:/Users/mosta/Downloads/tests-rv32i/tests-rv32i/t4.bin", ios::in | ios::binary | ios::ate);
 
 	if (inFile.is_open())
 	{
