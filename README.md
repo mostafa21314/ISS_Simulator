@@ -1,4 +1,4 @@
-This is a RISC-V simulator written in C++ for educational purposes. It simulates the execution of basic RISC-V instructions for the RV32I instruction set architecture.
+This is a RISC-V simulator written in C++ for educational purposes. It simulates the execution of basic RISC-V instructions for the RV32I instruction set architecture. It was created by AUC comp engineering students Mostafa Gaafar, and Youssef Badawy alongsie electronics engineering student Youssef Abbas.
 
 Features:
 
@@ -10,6 +10,9 @@ Supports system calls (ecall) for printing integers, reading characters, and exi
 Requirements:
 
 The simulator will read the assembly file, execute the instructions, and print the results.
+
+
+IMPORTANT: To use the simulator you have to input the data and text binary files in binary format as well as input the location where .data sections starts to store in the memory to ensure the program runs smoothly.
 
 
 Understanding the Output:
@@ -25,6 +28,6 @@ Challenges Faced:
 
 During development, we encountered a few challenges:
 
-Instruction Decoding: Accurately decoding different RISC-V instruction formats (R, I, S, J) proved to be a hurdle. We had to carefully analyze the instruction bitfields to determine the operation and operands.
-Memory Management: Simulating memory access without interacting with actual hardware required careful design to ensure proper handling of memory addresses and data types.
-Error Handling: Implementing robust error handling for invalid instructions or memory access exceptions was crucial to prevent unexpected behavior.
+Firstly alligning memory storage with .data proved to be a challenge as it required tuning load instructions as well as save instructions
+Secondly, Compressed instructions had there immediates scattered around and needed a lot of bitwise operation and careful observation
+Furthermore, figuring out how to assemble words as little endian format for both saves and loads so they work concurrently without producing errors.
