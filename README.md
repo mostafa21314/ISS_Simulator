@@ -12,8 +12,6 @@ Requirements:
 The simulator will read the assembly file, execute the instructions, and print the results.
 
 
-The simulator supports the RV32I instruction set architecture. You can find the detailed instruction specification for RV32I online https://riscv.org/wp-content/uploads/2017/05/riscv-spec-v2.2.pdf.
-
 Understanding the Output:
 
 The simulator will output the following information:
